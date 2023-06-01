@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: "AWS::Serverless-2016-10-31"
+Description: Unionize app
+
+Parameters:
+  LogLevel:
+    Type: String
+    Default: info
+
+Resources:
+  TestHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: unionize-test-handler
+      Runtime: python3.10
+      Handler: handlers/test.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
