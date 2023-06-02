@@ -8,14 +8,12 @@ Parameters:
     Default: info
 
 Resources:
-  TestHandler:
-    Type: AWS::Serverless::Function
+  UnionStack:
+    Type: AWS::Serverless::Application
     Properties:
-      FunctionName: unionize-test-handler
-      Runtime: python3.10
-      Handler: handlers/test.handler
-      Policies:
-        - AWSLambdaBasicExecutionRole
+      Location: union.yml
+      Parameters:
+        LogLevel: !Ref LogLevel
 
   UnionTable:
     Type: AWS::DynamoDB::Table

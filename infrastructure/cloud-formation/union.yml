@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Transform: AWS::Serverless-2016-10-31
+Transform: "AWS::Serverless-2016-10-31"
 Description: Union specific Resources
 
 Parameters:
@@ -10,8 +10,11 @@ Resources:
   CreateUnionHandler:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: unionize-test-handler
+      FunctionName: unionize-create-union
       Runtime: python3.10
       Handler: handlers/union/create.handler
       Policies:
         - AWSLambdaBasicExecutionRole
+      Environment:
+        Variables:
+          LogLevel: !Ref LogLevel
