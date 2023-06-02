@@ -19,14 +19,12 @@ Resources:
 
   UnionTable:
     Type: AWS::DynamoDB::Table
-    Propterties:
+    Properties:
       TableName: unionize-unions
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
-        - AttributeName: "companyName"
-          AttributeType: "S"
         - AttributeName: "unionName"
           AttributeType: "S"
       KeySchema:
         - AttributeName: "unionName"
-          AttributeType: HASH
+          KeyType: HASH

@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Union specific Resources
+
+Parameters:
+  LogLevel:
+    Type: String
+
+Resources:
+  CreateUnionHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: unionize-test-handler
+      Runtime: python3.10
+      Handler: handlers/union/create.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole

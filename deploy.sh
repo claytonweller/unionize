@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 DEFAULT_REGION="us-east-1"
-STACK_NAME="unionize-test"
-S3_BUCKET="test-union"
+STACK_NAME="unionize"
+S3_BUCKET="unionize-bucket"
 
 echo -e "\n>>> Building stack $STACK_NAME\n"
 sam build -t infrastructure/cloud-formation/template.yml -s ./src \
