@@ -16,3 +16,17 @@ Resources:
       Handler: handlers/test.handler
       Policies:
         - AWSLambdaBasicExecutionRole
+
+  UnionTable:
+    Type: AWS::DynamoDB::Table
+    Propterties:
+      TableName: unionize-unions
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "companyName"
+          AttributeType: "S"
+        - AttributeName: "unionName"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "unionName"
+          AttributeType: HASH
