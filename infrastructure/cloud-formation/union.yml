@@ -5,8 +5,19 @@ Description: Union specific Resources
 Parameters:
   LogLevel:
     Type: String
+  RestApiId:
+    Type: String
+  RestApiRootId:
+    Type: String
 
 Resources:
+  UnionGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiId
+      PathPart: union
+      ParentId: !Ref RestApiRootId
+
   CreateUnionHandler:
     Type: AWS::Serverless::Function
     Properties:
@@ -18,3 +29,23 @@ Resources:
       Environment:
         Variables:
           LogLevel: !Ref LogLevel
+
+  CreateUnionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: unionize-create-union
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+
+  CreateUnionMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiId
+      ResourceId: !Ref UnionGatewayResource
+      HttpMethod: POST
+      ApiKeyRequired: true
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${CreateUnionHandler.Arn}/invocations

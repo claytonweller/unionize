@@ -1,7 +1,9 @@
+from modules.lambda_response import format
+
+
 def handler(event, context):
     print(event)
-
-    return {
-        "status": "success",
-        "message": event
+    response = {
+        "event": event
     }
+    return format(response)

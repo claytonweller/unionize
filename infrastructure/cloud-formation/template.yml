@@ -8,12 +8,20 @@ Parameters:
     Default: info
 
 Resources:
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      ApiKeySourceType: HEADER
+      Name: !Sub unionize-api
+
   UnionStack:
     Type: AWS::Serverless::Application
     Properties:
       Location: union.yml
       Parameters:
         LogLevel: !Ref LogLevel
+        RestApiId: !Ref RestApi
+        RestApiRootId: !GetAtt RestApi.RootResourceId
 
   UnionTable:
     Type: AWS::DynamoDB::Table
