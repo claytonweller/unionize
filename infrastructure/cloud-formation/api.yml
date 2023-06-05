@@ -27,6 +27,7 @@ Resources:
       Integration:
         Type: MOCK
 
+  # We have to deploy the api in order to have a stage name
   RestApiDeployment:
     DependsOn: RootMethod
     Type: AWS::ApiGateway::Deployment

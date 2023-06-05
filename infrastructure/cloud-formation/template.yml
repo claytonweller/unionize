@@ -18,6 +18,18 @@ Resources:
       Parameters:
         ApplicationName: !Ref ApplicationName
 
+  UnionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ApplicationName}-unions
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "unionName"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "unionName"
+          KeyType: HASH
+
   UnionStack:
     Type: AWS::Serverless::Application
     Properties:
@@ -27,15 +39,4 @@ Resources:
         LogLevel: !Ref LogLevel
         RestApiId: !GetAtt UnionizeApi.Outputs.RestApiId
         RestApiRootId: !GetAtt UnionizeApi.Outputs.RestApiRootId
-
-  UnionTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: unionize-unions
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: "unionName"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "unionName"
-          KeyType: HASH
+        UnionTableName: !Ref UnionTable

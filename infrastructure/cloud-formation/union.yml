@@ -11,6 +11,8 @@ Parameters:
     Type: String
   RestApiRootId:
     Type: String
+  UnionTableName:
+    Type: String
 
 Resources:
   UnionGatewayResource:
@@ -28,9 +30,12 @@ Resources:
       Handler: handlers/union/create.handler
       Policies:
         - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UnionTableName
       Environment:
         Variables:
           LogLevel: !Ref LogLevel
+          UnionTableName: !Ref UnionTableName
 
   CreateUnionPermission:
     DependsOn: CreateUnionHandler
