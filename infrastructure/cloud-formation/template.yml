@@ -14,6 +14,44 @@ Resources:
       ApiKeySourceType: HEADER
       Name: !Sub unionize-api
 
+  RestApiDeployment:
+    DependsOn: RestApi
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: Unionize standard deployment
+      RestApiId: !Ref RestApi
+      StageName: prod
+
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: unionize-api-key
+      Description: CloudFormation API Key
+      Enabled: true
+
+  ApiStandardUsagePlan:
+    DependsOn: RestApiDeployment
+    Type: "AWS::ApiGateway::UsagePlan"
+    Properties:
+      ApiStages:
+        - ApiId: !Ref RestApi
+          Stage: prod
+      Description: Standard Usage Plan
+      Quota:
+        Limit: 5000
+        Period: MONTH
+      Throttle:
+        BurstLimit: 200
+        RateLimit: 100
+      UsagePlanName: unionize-usage-plan
+
+  ApiUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref ApiStandardUsagePlan
+
   UnionStack:
     Type: AWS::Serverless::Application
     Properties:
