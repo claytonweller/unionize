@@ -32,6 +32,8 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref UnionTableName
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt UnionCreatedTopic.TopicName
       Environment:
         Variables:
           LogLevel: !Ref LogLevel
@@ -57,3 +59,8 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${CreateUnionHandler.Arn}/invocations
+
+  UnionCreatedTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${ApplicationName}-union-created
