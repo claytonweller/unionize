@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: "AWS::Serverless-2016-10-31"
+Description: Unionize Api
+
+Parameters:
+  ApplicationName:
+    Type: String
+    Default: unionize
+
+Resources:
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      ApiKeySourceType: HEADER
+      Name: !Sub ${ApplicationName}-api
+
+  # This is required in order for the deployment to work
+  # before any routes are created
+  RootMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !GetAtt RestApi.RootResourceId
+      HttpMethod: GET
+      ApiKeyRequired: False
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+
+  RestApiDeployment:
+    DependsOn: RootMethod
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: Unionize standard deployment
+      RestApiId: !Ref RestApi
+      StageName: prod
+
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub ${ApplicationName}-api-key
+      Description: CloudFormation API Key
+      Enabled: true
+
+  ApiStandardUsagePlan:
+    DependsOn: RestApiDeployment
+    Type: "AWS::ApiGateway::UsagePlan"
+    Properties:
+      ApiStages:
+        - ApiId: !Ref RestApi
+          Stage: prod
+      Description: Standard Usage Plan
+      Quota:
+        Limit: 5000
+        Period: MONTH
+      Throttle:
+        BurstLimit: 200
+        RateLimit: 100
+      UsagePlanName: !Sub ${ApplicationName}-usage-plan
+
+  ApiUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref ApiStandardUsagePlan
+
+Outputs:
+  RestApiId:
+    Description: "Api Gateway ID"
+    Value: !Ref RestApi
+
+  RestApiRootId:
+    Description: "Api Gateway Root ID"
+    Value: !GetAtt RestApi.RootResourceId

@@ -3,6 +3,8 @@ Transform: "AWS::Serverless-2016-10-31"
 Description: Union specific Resources
 
 Parameters:
+  ApplicationName:
+    Type: String
   LogLevel:
     Type: String
   RestApiId:
@@ -21,7 +23,7 @@ Resources:
   CreateUnionHandler:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: unionize-create-union
+      FunctionName: !Sub ${ApplicationName}-create-union
       Runtime: python3.10
       Handler: handlers/union/create.handler
       Policies:
@@ -31,9 +33,10 @@ Resources:
           LogLevel: !Ref LogLevel
 
   CreateUnionPermission:
+    DependsOn: CreateUnionHandler
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: unionize-create-union
+      FunctionName: !Sub ${ApplicationName}-create-union
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
 
