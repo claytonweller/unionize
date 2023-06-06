@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: "AWS::Serverless-2016-10-31"
+Description: Union specific Resources
+
+Parameters:
+  ApplicationName:
+    Type: String
+  LogLevel:
+    Type: String
+  RestApiId:
+    Type: String
+  RestApiRootId:
+    Type: String
+  UnionTableName:
+    Type: String
+
+Resources:
+  UnionGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiId
+      PathPart: union
+      ParentId: !Ref RestApiRootId
+
+  CreateUnionHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ApplicationName}-create-union
+      Runtime: python3.10
+      Handler: handlers/union/create.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UnionTableName
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt UnionCreatedTopic.TopicName
+      Environment:
+        Variables:
+          LogLevel: !Ref LogLevel
+          UnionTableName: !Ref UnionTableName
+
+  CreateUnionPermission:
+    DependsOn: CreateUnionHandler
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Sub ${ApplicationName}-create-union
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+
+  CreateUnionMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiId
+      ResourceId: !Ref UnionGatewayResource
+      HttpMethod: POST
+      ApiKeyRequired: true
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${CreateUnionHandler.Arn}/invocations
+
+  UnionCreatedTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${ApplicationName}-union-created

@@ -6,13 +6,37 @@ Parameters:
   LogLevel:
     Type: String
     Default: info
+  ApplicationName:
+    Type: String
+    Default: unionize
 
 Resources:
-  TestHandler:
-    Type: AWS::Serverless::Function
+  UnionizeApi:
+    Type: AWS::Serverless::Application
     Properties:
-      FunctionName: unionize-test-handler
-      Runtime: python3.10
-      Handler: handlers/test.handler
-      Policies:
-        - AWSLambdaBasicExecutionRole
+      Location: api.yml
+      Parameters:
+        ApplicationName: !Ref ApplicationName
+
+  UnionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ApplicationName}-unions
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "unionName"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "unionName"
+          KeyType: HASH
+
+  UnionStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: union.yml
+      Parameters:
+        ApplicationName: !Ref ApplicationName
+        LogLevel: !Ref LogLevel
+        RestApiId: !GetAtt UnionizeApi.Outputs.RestApiId
+        RestApiRootId: !GetAtt UnionizeApi.Outputs.RestApiRootId
+        UnionTableName: !Ref UnionTable
