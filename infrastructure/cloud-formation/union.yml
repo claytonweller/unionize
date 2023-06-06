@@ -64,3 +64,8 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: !Sub ${ApplicationName}-union-created
+
+Outputs:
+  UnionCreatedTopicArn:
+    Description: "Arn Reference for Union creation topic"
+    Value: !Ref UnionCreatedTopic
