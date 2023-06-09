@@ -27,6 +27,22 @@ Resources:
         - AttributeName: "encodedContactHash"
           KeyType: RANGE
 
+  # Authorize Resources
+  AuthorizeWorkerHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ApplicationName}-authorize-worker
+      Runtime: python3.10
+      Handler: handlers/worker/authorize.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkerTable
+      Environment:
+        Variables:
+          LogLevel: !Ref LogLevel
+
+  # Add Worker To Union Resources
   AddWorkerToUnionQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -42,7 +58,7 @@ Resources:
     Properties:
       FunctionName: !Sub ${ApplicationName}-add-worker-to-union
       Runtime: python3.10
-      Handler: handlers/worker/add.handler
+      Handler: handlers/worker/add_to_union.handler
       Policies:
         - AWSLambdaBasicExecutionRole
         - AmazonSNSFullAccess
