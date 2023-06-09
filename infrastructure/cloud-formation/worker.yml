@@ -33,9 +33,9 @@ Resources:
       QueueName: !Sub ${ApplicationName}-add-worker-to-union-q
       VisibilityTimeout: 10
       ReceiveMessageWaitTimeSeconds: 2
-      # RedrivePolicy:
-      #   deadLetterTargetArn: arn
-      #   maxReceiveCount: 3
+      RedrivePolicy:
+        maxReceiveCount: 3
+        deadLetterTargetArn: arn:aws:sqs:us-east-1:487170294390:test-queue
 
   AddWorkerToUnionHandler:
     Type: AWS::Serverless::Function
@@ -45,6 +45,9 @@ Resources:
       Handler: handlers/worker/add.handler
       Policies:
         - AWSLambdaBasicExecutionRole
+        - AmazonSNSFullAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkerTable
       Events:
         AddWorkerToUnionQueue:
           Type: SQS

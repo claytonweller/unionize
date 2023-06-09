@@ -1,6 +1,6 @@
 from modules.lambda_response import format
 from boto3 import resource, client
-from json import loads
+from json import loads, dumps
 
 
 dynamo = resource('dynamodb')
@@ -16,17 +16,18 @@ def handler(event, context):
         "event": event,
     }
     body = loads(event['body'])
+    union_name = body['unionName']
 
     item = {
-        'unionName': body['unionName'],
+        'unionName': union_name,
         'someOtherKey': 'key',
     }
-    saved_item = union_table.put_item(Item=item)
-    print(saved_item)
+    union_table.put_item(Item=item)
+    print(item)
 
     sns.publish(
         TopicArn=topic_arn,
-        Message='created',
-        Subject=body['unionName']
+        Message=event['body'],
+        Subject=union_name
     )
     return format(response)
