@@ -40,3 +40,12 @@ Resources:
         RestApiId: !GetAtt UnionizeApi.Outputs.RestApiId
         RestApiRootId: !GetAtt UnionizeApi.Outputs.RestApiRootId
         UnionTableName: !Ref UnionTable
+
+  WorkerStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: worker.yml
+      Parameters:
+        ApplicationName: !Ref ApplicationName
+        LogLevel: !Ref LogLevel
+        UnionCreatedTopicArn: !GetAtt UnionStack.Outputs.UnionCreatedTopicArn

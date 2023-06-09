@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: "AWS::Serverless-2016-10-31"
+Description: Worker specific Resources
+
+Parameters:
+  ApplicationName:
+    Type: String
+  LogLevel:
+    Type: String
+  UnionCreatedTopicArn:
+    Type: String
+
+Resources:
+  WorkerTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ApplicationName}-workers
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "unionName"
+          AttributeType: "S"
+        - AttributeName: "encodedContactHash"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "unionName"
+          KeyType: HASH
+        - AttributeName: "encodedContactHash"
+          KeyType: RANGE
+
+  AddWorkerToUnionQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${ApplicationName}-add-worker-to-union-q
+      VisibilityTimeout: 10
+      ReceiveMessageWaitTimeSeconds: 2
+      RedrivePolicy:
+        maxReceiveCount: 3
+        deadLetterTargetArn: arn:aws:sqs:us-east-1:487170294390:test-queue
+
+  AddWorkerToUnionHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ApplicationName}-add-worker-to-union
+      Runtime: python3.10
+      Handler: handlers/worker/add.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AmazonSNSFullAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkerTable
+      Events:
+        AddWorkerToUnionQueue:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt AddWorkerToUnionQueue.Arn
+            BatchSize: 1
+      Environment:
+        Variables:
+          LogLevel: !Ref LogLevel
+
+  UnionCreatedSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref UnionCreatedTopicArn
+      Endpoint: !GetAtt AddWorkerToUnionQueue.Arn
+      RawMessageDelivery: True
+      Protocol: sqs
+
+  # We have to add this otherwise the SNS topics cannot send to SQS
+  UnionCreatedSubscriptionPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref AddWorkerToUnionQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Id: SNSUnionCreatedQueuePolicy
+        Statement:
+          - Effect: Allow
+            Sid: Allow-SNS-SendMessage
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource: !GetAtt AddWorkerToUnionQueue.Arn
