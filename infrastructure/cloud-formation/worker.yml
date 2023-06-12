@@ -38,6 +38,49 @@ Resources:
         - AttributeName: "encodedContactHash"
           KeyType: RANGE
 
+  # Invite Resources
+  InviteWorkerHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ApplicationName}-invite-worker
+      Runtime: python3.10
+      Handler: handlers/worker/invite.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkerTable
+      Environment:
+        Variables:
+          LogLevel: !Ref LogLevel
+
+  InviteWorkerPermission:
+    DependsOn: InviteWorkerHandler
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Sub ${ApplicationName}-invite-worker
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+
+  InviteWorkerPathResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiId
+      PathPart: invite
+      ParentId: !Ref WorkerGatewayResource
+
+  InviteWorkerMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiId
+      ResourceId: !Ref InviteWorkerPathResource
+      HttpMethod: POST
+      ApiKeyRequired: true
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${InviteWorkerHandler.Arn}/invocations
+
   # SignUp Resources
   SignUpWorkerHandler:
     Type: AWS::Serverless::Function
