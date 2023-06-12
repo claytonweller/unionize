@@ -7,5 +7,6 @@ class Worker:
     encodedContactHash: str
     encodedPhone: str
     encodedEmail: str
+    encodedPassword: str
     authorized: bool
     pseudonym: str
