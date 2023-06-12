@@ -15,7 +15,7 @@ Resources:
       Name: !Sub ${ApplicationName}-api
 
   # This is required in order for the deployment to work
-  # before any routes are created
+  # before any routes are created. Only matters on first deploy.
   RootMethod:
     Type: AWS::ApiGateway::Method
     Properties:

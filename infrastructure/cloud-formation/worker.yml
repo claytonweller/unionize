@@ -7,10 +7,21 @@ Parameters:
     Type: String
   LogLevel:
     Type: String
+  RestApiId:
+    Type: String
+  RestApiRootId:
+    Type: String
   UnionCreatedTopicArn:
     Type: String
 
 Resources:
+  WorkerGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiId
+      PathPart: worker
+      ParentId: !Ref RestApiRootId
+
   WorkerTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -27,6 +38,50 @@ Resources:
         - AttributeName: "encodedContactHash"
           KeyType: RANGE
 
+  # SignUp Resources
+  SignUpWorkerHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ApplicationName}-sign-up-worker
+      Runtime: python3.10
+      Handler: handlers/worker/sign_up.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkerTable
+      Environment:
+        Variables:
+          LogLevel: !Ref LogLevel
+
+  SignUpWorkerPermission:
+    DependsOn: SignUpWorkerHandler
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Sub ${ApplicationName}-sign-up-worker
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+
+  SignUpWorkerPathResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiId
+      PathPart: signup
+      ParentId: !Ref WorkerGatewayResource
+
+  SignUpWorkerMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiId
+      ResourceId: !Ref SignUpWorkerPathResource
+      HttpMethod: POST
+      ApiKeyRequired: true
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${SignUpWorkerHandler.Arn}/invocations
+
+  # Add Worker To Union Resources
   AddWorkerToUnionQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -42,7 +97,7 @@ Resources:
     Properties:
       FunctionName: !Sub ${ApplicationName}-add-worker-to-union
       Runtime: python3.10
-      Handler: handlers/worker/add.handler
+      Handler: handlers/worker/add_to_union.handler
       Policies:
         - AWSLambdaBasicExecutionRole
         - AmazonSNSFullAccess
