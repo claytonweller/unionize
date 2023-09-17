@@ -3,6 +3,9 @@ from modules.worker.data_class import Worker
 from modules.worker.table import WorkerTable
 from modules.lambda_response import format
 from json import loads
+from boto3 import client
+
+sns = client('sns')
 
 
 def handler(event, context):
@@ -26,12 +29,11 @@ def handler(event, context):
     updated_worker = Worker(**updated_worker_dict)
     print(updated_worker)
     response = worker_table.upsert(updated_worker)
-    # Send confirmation text
-    # TODO waiting on my pinpoint number being out of 'pending' status
-    # sns.publish(
-    #     PhoneNumber="+12223334444",
-    #     Message=
-    # )
+
+    sns.publish(
+        PhoneNumber=updated_worker.phone,
+        Message="Signed up, text to this number to send messages to your coworkers"
+    )
 
     # Return success response
     return format(response)

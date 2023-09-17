@@ -3,6 +3,9 @@ from modules.worker.data_class import Worker
 from modules.worker.table import WorkerTable
 from modules.worker.generate_pseudonym import generate_pseydonym
 from json import loads
+from boto3 import client
+
+sns = client('sns')
 
 
 def handler(event, context):
@@ -23,13 +26,13 @@ def handler(event, context):
     print('New Worker')
     worker_table.upsert(worker)
     print(worker)
-    return
 
-    # TODO waiting on my pinpoint number being out of 'pending' status
-    # sns.publish(
-    #     PhoneNumber="+12223334444",
-    #     Message=
-    # )
+    sns.publish(
+        PhoneNumber=worker.phone,
+        Message="A coworker would like to start a union. Click here http----."
+    )
+
+    return
 
 
 def parse_worker_from_body(body) -> Worker:
