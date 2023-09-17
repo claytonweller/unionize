@@ -1,11 +1,14 @@
 from modules.worker.data_class import Worker
 
 
-def find_matching_union_worker(union_workers: list[Worker], phone: str) -> Worker | None:
+def find_matching_union_worker(union_workers: list[Worker], phone: str, email: str) -> Worker | None:
     def check(worker: Worker):
-        # TODO eventually we'll do an email match as well but that's not in POC scope
         phone_match = phone == worker.phone
-        return phone_match
+        email_match = email == worker.email
+        # TODO since we're using the AWS sandbox right now we only have access to sending to one number
+        # this should acutally be:
+        # phone_match or email_match
+        return phone_match and email_match
 
     matches = filter(check, union_workers)
     match = next(matches, None)
