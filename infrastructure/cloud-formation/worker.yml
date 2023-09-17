@@ -46,6 +46,7 @@ Resources:
       Runtime: python3.10
       Handler: handlers/worker/invite.handler
       Policies:
+        - AmazonSNSFullAccess
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref WorkerTable
