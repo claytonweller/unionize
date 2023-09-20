@@ -51,3 +51,11 @@ Resources:
         RestApiId: !GetAtt UnionizeApi.Outputs.RestApiId
         RestApiRootId: !GetAtt UnionizeApi.Outputs.RestApiRootId
         UnionCreatedTopicArn: !GetAtt UnionStack.Outputs.UnionCreatedTopicArn
+
+  SMSStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: sms.yml
+      Parameters:
+        ApplicationName: !Ref ApplicationName
+        LogLevel: !Ref LogLevel
