@@ -22,6 +22,30 @@ class WorkerTable:
         dynamo = resource('dynamodb')
         self.table = dynamo.Table(self.table_name)
 
+    def find_matching_union_worker(self, phone: str, email: str, union_name: str) -> Worker | None:
+        union_workers = self.get_workers_in_union(union_name)
+
+        def check(worker: Worker):
+            phone_match = phone == worker.phone
+            email_match = email == worker.email
+            # TODO since we're using the AWS sandbox right now we only have access to sending to one number
+            # this should acutally be:
+            # phone_match or email_match
+            return phone_match and email_match
+
+        matches = filter(check, union_workers)
+        match = next(matches, None)
+        print(f'MATCH - {match}')
+        return match
+
+    def find_worker_by_phone(self, phone) -> Worker:
+        workers = self.table.query(
+            IndexName='encodedPhone',
+            ScanIndexForward=False,
+            KeyConditionExpression=Key('encodedPhone').eq(phone))
+        items = workers['Items']
+        return items[0]
+
     def get_workers_in_union(self, union_name: str) -> list[Worker]:
         union_workers = self.table.query(
             KeyConditionExpression=Key('unionName').eq(union_name))

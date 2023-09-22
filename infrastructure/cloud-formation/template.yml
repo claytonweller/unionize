@@ -59,3 +59,4 @@ Resources:
       Parameters:
         ApplicationName: !Ref ApplicationName
         LogLevel: !Ref LogLevel
+        WorkerTableName: !GetAtt WorkerStack.Outputs.WorkerTableName

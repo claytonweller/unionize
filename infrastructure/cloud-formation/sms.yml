@@ -7,6 +7,8 @@ Parameters:
     Type: String
   LogLevel:
     Type: String
+  WorkerTableName:
+    Type: String
 
 Resources:
   SMSReceivedTopic:
@@ -33,6 +35,8 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - AmazonSNSFullAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkerTableName
       Events:
         ParseAndRouteSMSQueue:
           Type: SQS
