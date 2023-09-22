@@ -41,10 +41,12 @@ class WorkerTable:
     def find_worker_by_phone(self, phone) -> Worker:
         workers = self.table.query(
             IndexName='encodedPhone',
+            # When this value is false we sort by most recent first this is a stop gap
+            # for managing workers with the same number in two different unions
             ScanIndexForward=False,
             KeyConditionExpression=Key('encodedPhone').eq(phone))
         items = workers['Items']
-        return items[0]
+        return self.parse_worker_item(items[0])
 
     def get_workers_in_union(self, union_name: str) -> list[Worker]:
         union_workers = self.table.query(
