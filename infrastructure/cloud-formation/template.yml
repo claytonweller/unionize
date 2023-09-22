@@ -60,3 +60,4 @@ Resources:
         ApplicationName: !Ref ApplicationName
         LogLevel: !Ref LogLevel
         WorkerTableName: !GetAtt WorkerStack.Outputs.WorkerTableName
+        WorkerAcceptedSMSInviteTopic: !GetAtt WorkerStack.Outputs.WorkerAcceptedSMSInviteTopic

@@ -24,9 +24,13 @@ def handler(event, context):
         print('Authorized')
         # Send to union message topic
         return
+    if worker.invite_accepted:
+        print('already accepted')
+        # TODO remind them to authorize
+        return
     if 'help' in message:
         print('Help')
-        # Create a response flow that sends a help message.
+        # TODO Create a response flow that sends a help message.
         return
     if 'stop' in message:
         print('worker not interested in receiving more texts')

@@ -45,8 +45,9 @@ class WorkerTable:
             # for managing workers with the same number in two different unions
             ScanIndexForward=False,
             KeyConditionExpression=Key('encodedPhone').eq(phone))
-        items = workers['Items']
-        return self.parse_worker_item(items[0])
+        item = workers['Items'][0]
+        print(f'Worker - {item}')
+        return self.parse_worker_item(item)
 
     def get_workers_in_union(self, union_name: str) -> list[Worker]:
         union_workers = self.table.query(
