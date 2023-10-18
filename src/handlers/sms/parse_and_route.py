@@ -1,16 +1,16 @@
-from json import loads
-from modules.worker.find_matching_union_worker import find_matching_union_worker
+import json
 from modules.worker.table import WorkerTable
+import os
+from boto3 import client
 
-# from boto3 import client
-
-# sns = client('sns')
+accept_sms_invite_topic_arn = os.getenv('WorkerAcceptedSMSInviteTopicARN')
+sns = client('sns')
 
 
 def handler(event, context):
 
     print(event)
-    body = loads(event['Records'][0]['body'])
+    body = json.loads(event['Records'][0]['body'])
 
     message = body['messageBody'].lower()
     print(message)
@@ -39,5 +39,10 @@ def handler(event, context):
 
     print('worker accepts invitation')
     # Send to accept invitaion topic
+    sns.publish(
+        TopicArn=accept_sms_invite_topic_arn,
+        Message=json.dumps(worker),
+        Subject=worker.union_name
+    )
 
     return

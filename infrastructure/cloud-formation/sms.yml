@@ -48,6 +48,7 @@ Resources:
       Environment:
         Variables:
           LogLevel: !Ref LogLevel
+          WorkerAcceptedSMSInviteTopicARN: !Ref WorkerAcceptedSMSInviteTopic
 
   SMSReceivedSubscription:
     Type: AWS::SNS::Subscription

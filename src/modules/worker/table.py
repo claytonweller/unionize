@@ -83,12 +83,12 @@ class WorkerTable:
 
     def parse_worker_item(self, item) -> Worker:
         # TODO in the future these will not be stored as plain text
-        decoded_phone = item['encodedPhone']
-        decoded_email = item['encodedEmail']
+        phone = item['encodedPhone']
+        email = item['encodedEmail']
         worker = Worker(
             item['unionName'],
-            decoded_phone,
-            decoded_email,
+            phone,
+            email,
             item['inviteAccepted'],
             item['authorized'],
             item['pseudonym'],
