@@ -1,5 +1,7 @@
 import json
 from modules.worker.table import WorkerTable
+from modules.worker.sms_messaging import send_authorization_link
+
 import os
 from boto3 import client
 
@@ -26,7 +28,7 @@ def handler(event, context):
         return
     if worker.invite_accepted:
         print('already accepted')
-        # TODO remind them to authorize
+        send_authorization_link(phone, worker.union_name)
         return
     if 'help' in message:
         print('Help')
@@ -41,7 +43,7 @@ def handler(event, context):
     # Send to accept invitaion topic
     sns.publish(
         TopicArn=accept_sms_invite_topic_arn,
-        Message=json.dumps(worker),
+        Message=json.dumps(worker.__dict__),
         Subject=worker.union_name
     )
 

@@ -12,7 +12,7 @@ def handler(event, context):
     print(event)
     body = loads(event['body'])
     worker_table = WorkerTable()
-    union_workers = worker_table.get_workers_in_union(body['unionName'])
+    union_workers = worker_table.get_workers_in_union(body['union_name'])
     match = find_matching_union_worker(union_workers, body['phone'])
     if not match:
         return format('Worker not found in Union', 404)
