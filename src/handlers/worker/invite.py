@@ -13,9 +13,9 @@ sns = client('sns')
 def handler(event, context):
     print(event)
     body = loads(event['body'])
-    potential_workers = body['potentialWorkers']
+    potential_workers = body['potential_workers']
     worker_table = WorkerTable()
-    union_name = body['unionName']
+    union_name = body['union_name']
     union_workers = worker_table.get_workers_in_union(union_name)
 
     for potential_worker in potential_workers:

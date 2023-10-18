@@ -73,8 +73,8 @@ class WorkerTable:
             contact_hash,
             encoded_phone,
             encoded_email,
-            worker.authorized,
             worker.invite_accepted,
+            worker.authorized,
             worker.pseudonym,
             encoded_password,
         )
