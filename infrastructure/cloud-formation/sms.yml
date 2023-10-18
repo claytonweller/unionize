@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: "AWS::Serverless-2016-10-31"
+Description: SMS specific Resources
+
+Parameters:
+  ApplicationName:
+    Type: String
+  LogLevel:
+    Type: String
+  WorkerTableName:
+    Type: String
+  WorkerAcceptedSMSInviteTopic:
+    Type: String
+
+Resources:
+  SMSReceivedTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${ApplicationName}-sms-received
+
+  ParseAndRouteSMSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${ApplicationName}-parse-and-route-sms-q
+      VisibilityTimeout: 10
+      ReceiveMessageWaitTimeSeconds: 2
+      RedrivePolicy:
+        maxReceiveCount: 3
+        deadLetterTargetArn: arn:aws:sqs:us-east-1:487170294390:test-queue
+
+  ParseAndRouteSMSHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ApplicationName}-parse-and-route-sms
+      Runtime: python3.10
+      Handler: handlers/sms/parse_and_route.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AmazonSNSFullAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkerTableName
+      Events:
+        ParseAndRouteSMSQueue:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt ParseAndRouteSMSQueue.Arn
+            BatchSize: 1
+      Environment:
+        Variables:
+          LogLevel: !Ref LogLevel
+          WorkerAcceptedSMSInviteTopicARN: !Ref WorkerAcceptedSMSInviteTopic
+
+  SMSReceivedSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref SMSReceivedTopic
+      Endpoint: !GetAtt ParseAndRouteSMSQueue.Arn
+      RawMessageDelivery: True
+      Protocol: sqs
+
+  # We have to add this otherwise the SNS topics cannot send to SQS
+  SMSReceivedSubscriptionPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref ParseAndRouteSMSQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Id: SNSSMSReceivedQueuePolicy
+        Statement:
+          - Effect: Allow
+            Sid: Allow-SNS-SendMessage
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource: !GetAtt ParseAndRouteSMSQueue.Arn

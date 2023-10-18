@@ -32,11 +32,20 @@ Resources:
           AttributeType: "S"
         - AttributeName: "encodedContactHash"
           AttributeType: "S"
+        - AttributeName: "encodedPhone"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "unionName"
           KeyType: HASH
         - AttributeName: "encodedContactHash"
           KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: encodedPhone
+          KeySchema:
+            - AttributeName: "encodedPhone"
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
 
   # Invite Resources
   InviteWorkerHandler:
@@ -166,6 +175,19 @@ Resources:
       RawMessageDelivery: True
       Protocol: sqs
 
+  WorkerAcceptedSMSInviteTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${ApplicationName}-worker-accepted-sms-invite
+
+  WorkerAcceptedSMSInviteSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref WorkerAcceptedSMSInviteTopic
+      Endpoint: !GetAtt AddWorkerToUnionQueue.Arn
+      RawMessageDelivery: True
+      Protocol: sqs
+
   # We have to add this otherwise the SNS topics cannot send to SQS
   UnionCreatedSubscriptionPolicy:
     Type: AWS::SQS::QueuePolicy
@@ -184,3 +206,10 @@ Resources:
               - sqs:SendMessage
               - sqs:SendMessageBatch
             Resource: !GetAtt AddWorkerToUnionQueue.Arn
+
+Outputs:
+  WorkerTableName:
+    Description: "The specific name of the table storing worker data, for use in access policies in other stacks"
+    Value: !Ref WorkerTable
+  WorkerAcceptedSMSInviteTopic:
+    Value: !Ref WorkerAcceptedSMSInviteTopic

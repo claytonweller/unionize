@@ -22,6 +22,33 @@ class WorkerTable:
         dynamo = resource('dynamodb')
         self.table = dynamo.Table(self.table_name)
 
+    def find_matching_union_worker(self, phone: str, email: str, union_name: str) -> Worker | None:
+        union_workers = self.get_workers_in_union(union_name)
+
+        def check(worker: Worker):
+            phone_match = phone == worker.phone
+            email_match = email == worker.email
+            # TODO since we're using the AWS sandbox right now we only have access to sending to one number
+            # this should acutally be:
+            # phone_match or email_match
+            return phone_match and email_match
+
+        matches = filter(check, union_workers)
+        match = next(matches, None)
+        print(f'MATCH - {match}')
+        return match
+
+    def find_worker_by_phone(self, phone) -> Worker:
+        workers = self.table.query(
+            IndexName='encodedPhone',
+            # When this value is false we sort by most recent first this is a stop gap
+            # for managing workers with the same number in two different unions
+            ScanIndexForward=False,
+            KeyConditionExpression=Key('encodedPhone').eq(phone))
+        item = workers['Items'][0]
+        print(f'Worker - {item}')
+        return self.parse_worker_item(item)
+
     def get_workers_in_union(self, union_name: str) -> list[Worker]:
         union_workers = self.table.query(
             KeyConditionExpression=Key('unionName').eq(union_name))
@@ -56,12 +83,12 @@ class WorkerTable:
 
     def parse_worker_item(self, item) -> Worker:
         # TODO in the future these will not be stored as plain text
-        decoded_phone = item['encodedPhone']
-        decoded_email = item['encodedEmail']
+        phone = item['encodedPhone']
+        email = item['encodedEmail']
         worker = Worker(
             item['unionName'],
-            decoded_phone,
-            decoded_email,
+            phone,
+            email,
             item['inviteAccepted'],
             item['authorized'],
             item['pseudonym'],

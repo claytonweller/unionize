@@ -15,6 +15,11 @@ Parameters:
     Type: String
 
 Resources:
+  UnionCreatedTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${ApplicationName}-union-created
+
   UnionGatewayResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -38,6 +43,7 @@ Resources:
         Variables:
           LogLevel: !Ref LogLevel
           UnionTableName: !Ref UnionTableName
+          UnionCreatedTopicARN: !Ref UnionCreatedTopic
 
   CreateUnionPermission:
     DependsOn: CreateUnionHandler
@@ -59,11 +65,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${CreateUnionHandler.Arn}/invocations
-
-  UnionCreatedTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub ${ApplicationName}-union-created
 
 Outputs:
   UnionCreatedTopicArn:

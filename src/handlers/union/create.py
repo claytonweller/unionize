@@ -1,13 +1,14 @@
 from modules.lambda_response import format
 from boto3 import resource, client
 from json import loads, dumps
+import os
 
+topic_arn = os.getenv('UnionCreatedTopicARN')
+table_name = os.getenv('UnionTableName')
 
 dynamo = resource('dynamodb')
 sns = client('sns')
-
-union_table = dynamo.Table('unionize-unions')
-topic_arn = 'arn:aws:sns:us-east-1:487170294390:unionize-union-created'
+union_table = dynamo.Table(table_name)
 
 
 def handler(event, context):
