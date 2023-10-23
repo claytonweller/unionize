@@ -1,34 +1,24 @@
 from modules.lambda_response import format
-from boto3 import resource, client
-from json import loads, dumps
+from modules.union.table import UnionTable
+from boto3 import client
+from json import loads
 import os
 
-topic_arn = os.getenv('UnionCreatedTopicARN')
-table_name = os.getenv('UnionTableName')
-
-dynamo = resource('dynamodb')
 sns = client('sns')
-union_table = dynamo.Table(table_name)
+topic_arn = os.getenv('UnionCreatedTopicARN')
+union_table = UnionTable()
 
 
-def handler(event, context):
+def handler(event, _context):
     print(event)
-    response = {
-        "event": event,
-    }
     body = loads(event['body'])
-    union_name = body['unionName']
-
-    item = {
-        'unionName': union_name,
-        'someOtherKey': 'key',
-    }
-    union_table.put_item(Item=item)
-    print(item)
+    union_name = body['union_name']
+    union = union_table.create(union_name)
+    print(union)
 
     sns.publish(
         TopicArn=topic_arn,
         Message=event['body'],
         Subject=union_name
     )
-    return format(response)
+    return format(union)
