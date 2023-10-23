@@ -1,6 +1,7 @@
 from modules.worker.table import WorkerTable
 from modules.worker.sms_messaging import send_authorization_link
 from modules.union.data_class import UnionMessage
+from datetime import datetime
 
 import json
 import os
@@ -28,7 +29,7 @@ def handler(event, context):
         print('Authorized')
         union_message = UnionMessage(
             worker.union_name,
-            "2023-01-01",
+            datetime.now().isoformat(),
             message_text,
             worker.pseudonym,
             # TODO I don't want to be passing around un hashed contact info

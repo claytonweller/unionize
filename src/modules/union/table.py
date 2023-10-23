@@ -36,9 +36,15 @@ class UnionTable:
         return union
 
     def format_union_item(self, union: Union) -> dict:
+        def convert(union_message) -> dict:
+            if isinstance(union_message, UnionMessage):
+                return union_message.__dict__
+            return union_message
+
+        message_dicts = map(convert, union.messages)
         return UnionItem(
             union.name,
-            union.messages
+            list(message_dicts)
         ).__dict__
 
     def parse_union_item(self, item) -> Union:
