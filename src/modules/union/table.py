@@ -48,7 +48,19 @@ class UnionTable:
         ).__dict__
 
     def parse_union_item(self, item) -> Union:
+
+        union_messages = map(self.parse_union_item_message, item['messages'])
+
         return Union(
             item['unionName'],
-            item['messages']
+            list(union_messages)
+        )
+
+    def parse_union_item_message(self, message_dict):
+        return UnionMessage(
+            message_dict['union_name'],
+            message_dict['iso_date'],
+            message_dict['text'],
+            message_dict['worker_pseudonym'],
+            message_dict['worker_contact_hash']
         )
