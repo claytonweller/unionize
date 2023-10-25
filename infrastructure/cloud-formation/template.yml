@@ -30,6 +30,31 @@ Resources:
         - AttributeName: "unionName"
           KeyType: HASH
 
+  WorkerTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ApplicationName}-workers
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "unionName"
+          AttributeType: "S"
+        - AttributeName: "encodedContactHash"
+          AttributeType: "S"
+        - AttributeName: "encodedPhone"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "unionName"
+          KeyType: HASH
+        - AttributeName: "encodedContactHash"
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: encodedPhone
+          KeySchema:
+            - AttributeName: "encodedPhone"
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
   UnionStack:
     Type: AWS::Serverless::Application
     Properties:
@@ -40,6 +65,7 @@ Resources:
         RestApiId: !GetAtt UnionizeApi.Outputs.RestApiId
         RestApiRootId: !GetAtt UnionizeApi.Outputs.RestApiRootId
         UnionTableName: !Ref UnionTable
+        WorkerTableName: !Ref WorkerTable
 
   WorkerStack:
     Type: AWS::Serverless::Application
@@ -51,6 +77,7 @@ Resources:
         RestApiId: !GetAtt UnionizeApi.Outputs.RestApiId
         RestApiRootId: !GetAtt UnionizeApi.Outputs.RestApiRootId
         UnionCreatedTopicArn: !GetAtt UnionStack.Outputs.UnionCreatedTopicArn
+        WorkerTableName: !Ref WorkerTable
 
   SMSStack:
     Type: AWS::Serverless::Application
@@ -59,5 +86,6 @@ Resources:
       Parameters:
         ApplicationName: !Ref ApplicationName
         LogLevel: !Ref LogLevel
-        WorkerTableName: !GetAtt WorkerStack.Outputs.WorkerTableName
-        WorkerAcceptedSMSInviteTopic: !GetAtt WorkerStack.Outputs.WorkerAcceptedSMSInviteTopic
+        WorkerTableName: !Ref WorkerTable
+        WorkerAcceptedSMSInviteTopicArn: !GetAtt WorkerStack.Outputs.WorkerAcceptedSMSInviteTopicArn
+        UnionMessageReceivedTopicArn: !GetAtt UnionStack.Outputs.UnionMessageReceivedTopicArn

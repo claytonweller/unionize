@@ -9,7 +9,9 @@ Parameters:
     Type: String
   WorkerTableName:
     Type: String
-  WorkerAcceptedSMSInviteTopic:
+  WorkerAcceptedSMSInviteTopicArn:
+    Type: String
+  UnionMessageReceivedTopicArn:
     Type: String
 
 Resources:
@@ -48,7 +50,9 @@ Resources:
       Environment:
         Variables:
           LogLevel: !Ref LogLevel
-          WorkerAcceptedSMSInviteTopicARN: !Ref WorkerAcceptedSMSInviteTopic
+          WorkerAcceptedSMSInviteTopicArn: !Ref WorkerAcceptedSMSInviteTopicArn
+          UnionMessageReceivedTopicArn: !Ref UnionMessageReceivedTopicArn
+          WorkerTableName: !Ref WorkerTableName
 
   SMSReceivedSubscription:
     Type: AWS::SNS::Subscription

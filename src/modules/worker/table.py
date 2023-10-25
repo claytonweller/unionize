@@ -2,6 +2,7 @@ from boto3 import resource
 from boto3.dynamodb.conditions import Key
 from modules.worker.data_class import Worker
 from dataclasses import dataclass
+import os
 
 
 @dataclass
@@ -18,7 +19,7 @@ class WorkerItem:
 
 class WorkerTable:
     def __init__(self):
-        self.table_name = 'unionize-workers'
+        self.table_name = os.getenv('WorkerTableName')
         dynamo = resource('dynamodb')
         self.table = dynamo.Table(self.table_name)
 

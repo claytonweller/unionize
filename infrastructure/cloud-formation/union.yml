@@ -13,6 +13,8 @@ Parameters:
     Type: String
   UnionTableName:
     Type: String
+  WorkerTableName:
+    Type: String
 
 Resources:
   UnionCreatedTopic:
@@ -27,6 +29,74 @@ Resources:
       PathPart: union
       ParentId: !Ref RestApiRootId
 
+  # Process Union Message resources
+  UnionMessageReceivedTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${ApplicationName}-union-message-received
+
+  UnionMessageReceivedSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref UnionMessageReceivedTopic
+      Endpoint: !GetAtt ProcessUnionMessageQueue.Arn
+      RawMessageDelivery: True
+      Protocol: sqs
+
+  UnionMessageReceivedSubscriptionPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref ProcessUnionMessageQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Id: SNSUnionCreatedQueuePolicy
+        Statement:
+          - Effect: Allow
+            Sid: Allow-SNS-SendMessage
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource: !GetAtt ProcessUnionMessageQueue.Arn
+
+  ProcessUnionMessageQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${ApplicationName}-process-union-message-q
+      VisibilityTimeout: 10
+      ReceiveMessageWaitTimeSeconds: 2
+      RedrivePolicy:
+        maxReceiveCount: 3
+        deadLetterTargetArn: arn:aws:sqs:us-east-1:487170294390:test-queue
+
+  ProcessUnionMessageHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ApplicationName}-process-union-message
+      Runtime: python3.10
+      Handler: handlers/union/process_message.handler
+      Policies:
+        - AmazonSNSFullAccess
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UnionTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkerTableName
+      Events:
+        ProcessUnionMessageQueue:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt ProcessUnionMessageQueue.Arn
+            BatchSize: 1
+      Environment:
+        Variables:
+          LogLevel: !Ref LogLevel
+          UnionTableName: !Ref UnionTableName
+          WorkerTableName: !Ref WorkerTableName
+
+  # Create Union resources
   CreateUnionHandler:
     Type: AWS::Serverless::Function
     Properties:
@@ -70,3 +140,6 @@ Outputs:
   UnionCreatedTopicArn:
     Description: "Arn Reference for Union creation topic"
     Value: !Ref UnionCreatedTopic
+
+  UnionMessageReceivedTopicArn:
+    Value: !Ref UnionMessageReceivedTopic

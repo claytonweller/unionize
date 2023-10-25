@@ -13,6 +13,8 @@ Parameters:
     Type: String
   UnionCreatedTopicArn:
     Type: String
+  WorkerTableName:
+    Type: String
 
 Resources:
   WorkerGatewayResource:
@@ -21,31 +23,6 @@ Resources:
       RestApiId: !Ref RestApiId
       PathPart: worker
       ParentId: !Ref RestApiRootId
-
-  WorkerTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${ApplicationName}-workers
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: "unionName"
-          AttributeType: "S"
-        - AttributeName: "encodedContactHash"
-          AttributeType: "S"
-        - AttributeName: "encodedPhone"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "unionName"
-          KeyType: HASH
-        - AttributeName: "encodedContactHash"
-          KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: encodedPhone
-          KeySchema:
-            - AttributeName: "encodedPhone"
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
 
   # Invite Resources
   InviteWorkerHandler:
@@ -58,9 +35,10 @@ Resources:
         - AmazonSNSFullAccess
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
-            TableName: !Ref WorkerTable
+            TableName: !Ref WorkerTableName
       Environment:
         Variables:
+          WorkerTableName: !Ref WorkerTableName
           LogLevel: !Ref LogLevel
 
   InviteWorkerPermission:
@@ -102,9 +80,10 @@ Resources:
         - AmazonSNSFullAccess
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
-            TableName: !Ref WorkerTable
+            TableName: !Ref WorkerTableName
       Environment:
         Variables:
+          WorkerTableName: !Ref WorkerTableName
           LogLevel: !Ref LogLevel
 
   SignUpWorkerPermission:
@@ -156,7 +135,7 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - AmazonSNSFullAccess
         - DynamoDBCrudPolicy:
-            TableName: !Ref WorkerTable
+            TableName: !Ref WorkerTableName
       Events:
         AddWorkerToUnionQueue:
           Type: SQS
@@ -165,6 +144,7 @@ Resources:
             BatchSize: 1
       Environment:
         Variables:
+          WorkerTableName: !Ref WorkerTableName
           LogLevel: !Ref LogLevel
 
   UnionCreatedSubscription:
@@ -208,8 +188,5 @@ Resources:
             Resource: !GetAtt AddWorkerToUnionQueue.Arn
 
 Outputs:
-  WorkerTableName:
-    Description: "The specific name of the table storing worker data, for use in access policies in other stacks"
-    Value: !Ref WorkerTable
-  WorkerAcceptedSMSInviteTopic:
+  WorkerAcceptedSMSInviteTopicArn:
     Value: !Ref WorkerAcceptedSMSInviteTopic
