@@ -1,4 +1,3 @@
-from modules.worker.find_matching_union_worker import find_matching_union_worker
 from modules.worker.data_class import Worker
 from modules.worker.table import WorkerTable
 from modules.worker.sms_messaging import send_authorization_link
@@ -11,10 +10,9 @@ def handler(event, context):
     body = loads(event['Records'][0]['body'])
     union_name = body['union_name']
     worker_table = WorkerTable()
-    union_workers = worker_table.get_workers_in_union(union_name)
     worker = parse_worker_from_body(body)
-    match = find_matching_union_worker(
-        union_workers, worker.phone, worker.email)
+    match = worker_table.find_matching_union_worker(
+        worker.phone, worker.email, union_name)
 
     if match and match.invite_accepted:
         # TODO This could definitely be more robust

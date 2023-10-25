@@ -2,12 +2,8 @@ from modules.lambda_response import format
 from modules.worker.table import WorkerTable
 from modules.worker.data_class import Worker
 from modules.worker.generate_pseudonym import generate_pseydonym
-from modules.worker.find_matching_union_worker import find_matching_union_worker
-
+from modules.worker.sms_messaging import send_worker_invite
 from json import loads
-from boto3 import client
-
-sns = client('sns')
 
 
 def handler(event, context):
@@ -16,22 +12,18 @@ def handler(event, context):
     potential_workers = body['potential_workers']
     worker_table = WorkerTable()
     union_name = body['union_name']
-    union_workers = worker_table.get_workers_in_union(union_name)
 
     for potential_worker in potential_workers:
         worker = parse_worker(potential_worker, union_name)
-        match = find_matching_union_worker(
-            union_workers, worker.phone, worker.email)
+        match = worker_table.find_matching_union_worker(
+            worker.phone, worker.email, union_name)
         if match:
             # TODO This could definitely be more robust
             print('Worker Already exists')
             continue
 
         worker_table.upsert(worker)
-        sns.publish(
-            PhoneNumber=worker.phone,
-            Message=f'A coworker wants to talk about starting a union at {union_name}. Reply to this message to opt in.'
-        )
+        send_worker_invite(worker.phone, union_name)
 
     return format(body)
 

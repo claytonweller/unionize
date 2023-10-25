@@ -29,3 +29,13 @@ def send_union_message_confirmation(phone, union_name):
     message = f'Message successfully sent to {union_name}'
     publish(phone, message)
     return message
+
+
+def send_worker_signup_confirmation(phone):
+    message = "Signed up, text to this number to send messages to your coworkers"
+    publish(phone, message)
+
+
+def send_worker_invite(phone, union_name):
+    message = f'A coworker wants to talk about starting a union at {union_name}. Reply to this message to opt in.'
+    publish(phone, message)
