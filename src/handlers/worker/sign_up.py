@@ -1,4 +1,3 @@
-from modules.worker.find_matching_union_worker import find_matching_union_worker
 from modules.worker.data_class import Worker
 from modules.worker.table import WorkerTable
 from modules.lambda_response import format
@@ -12,8 +11,10 @@ def handler(event, context):
     print(event)
     body = loads(event['body'])
     worker_table = WorkerTable()
-    union_workers = worker_table.get_workers_in_union(body['union_name'])
-    match = find_matching_union_worker(union_workers, body['phone'])
+    phone = body['phone'] if 'phone' in body else ''
+    email = body['email'] if 'email' in body else ''
+    union_name = body['union_name']
+    match = worker_table.find_matching_union_worker(phone, email, union_name)
     if not match:
         return format('Worker not found in Union', 404)
 
