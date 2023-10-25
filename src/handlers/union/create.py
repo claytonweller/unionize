@@ -1,12 +1,10 @@
 from modules.lambda_response import format
 from modules.union.table import UnionTable
-from boto3 import client
+from modules.event_emitter import EventEmitter
 from json import loads
-import os
 
-sns = client('sns')
-topic_arn = os.getenv('UnionCreatedTopicARN')
 union_table = UnionTable()
+event_emitter = EventEmitter()
 
 
 def handler(event, _context):
@@ -16,9 +14,5 @@ def handler(event, _context):
     union = union_table.create(union_name)
     print(union)
 
-    sns.publish(
-        TopicArn=topic_arn,
-        Message=event['body'],
-        Subject=union_name
-    )
+    event_emitter.union_created(body, union_name)
     return format(union)

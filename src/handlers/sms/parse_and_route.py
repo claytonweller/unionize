@@ -1,16 +1,9 @@
 from modules.worker.table import WorkerTable
-from modules.worker.data_class import Worker
 from modules.worker.sms_messaging import send_authorization_link
-from modules.union.data_class import UnionMessage
-from datetime import datetime
-
+from modules.event_emitter import EventEmitter
 import json
-import os
-from boto3 import client
 
-accept_sms_invite_topic_arn = os.getenv('WorkerAcceptedSMSInviteTopicArn')
-union_message_received_topic_arn = os.getenv('UnionMessageReceivedTopicArn')
-sns = client('sns')
+event_emitter = EventEmitter()
 
 
 def handler(event, context):
@@ -28,7 +21,7 @@ def handler(event, context):
         return
     if worker.authorized:
         print('Authorized')
-        emit_to_union_message_received_topic(worker, message_text)
+        event_emitter.union_message_received(worker, message_text)
         return
     if worker.invite_accepted:
         print('already accepted')
@@ -45,30 +38,5 @@ def handler(event, context):
 
     print('worker accepts invitation')
     # Send to accept invitaion topic
-    emit_to_accept_invite_topic(worker)
+    event_emitter.accept_invite(worker)
     return
-
-
-# TODO at some point we might want an sns emiter class.
-def emit_to_union_message_received_topic(worker: Worker, message_text):
-    union_message = UnionMessage(
-        worker.union_name,
-        datetime.now().isoformat(),
-        message_text,
-        worker.pseudonym,
-        # TODO I don't want to be passing around un hashed contact info
-        worker.phone
-    )
-    sns.publish(
-        TopicArn=union_message_received_topic_arn,
-        Message=json.dumps(union_message.__dict__),
-        Subject=worker.union_name
-    )
-
-
-def emit_to_accept_invite_topic(worker: Worker):
-    sns.publish(
-        TopicArn=accept_sms_invite_topic_arn,
-        Message=json.dumps(worker.__dict__),
-        Subject=worker.union_name
-    )

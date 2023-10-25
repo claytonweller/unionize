@@ -1,10 +1,8 @@
 from modules.worker.data_class import Worker
 from modules.worker.table import WorkerTable
 from modules.lambda_response import format
+from modules.worker.sms_messaging import send_worker_signup_confirmation
 from json import loads
-from boto3 import client
-
-sns = client('sns')
 
 
 def handler(event, context):
@@ -31,10 +29,7 @@ def handler(event, context):
     print(updated_worker)
     response = worker_table.upsert(updated_worker)
 
-    sns.publish(
-        PhoneNumber=updated_worker.phone,
-        Message="Signed up, text to this number to send messages to your coworkers"
-    )
+    send_worker_signup_confirmation(updated_worker.phone)
 
     # Return success response
     return format(response)

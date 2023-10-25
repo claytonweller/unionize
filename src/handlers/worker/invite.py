@@ -2,11 +2,8 @@ from modules.lambda_response import format
 from modules.worker.table import WorkerTable
 from modules.worker.data_class import Worker
 from modules.worker.generate_pseudonym import generate_pseydonym
-
+from modules.worker.sms_messaging import send_worker_invite
 from json import loads
-from boto3 import client
-
-sns = client('sns')
 
 
 def handler(event, context):
@@ -26,10 +23,7 @@ def handler(event, context):
             continue
 
         worker_table.upsert(worker)
-        sns.publish(
-            PhoneNumber=worker.phone,
-            Message=f'A coworker wants to talk about starting a union at {union_name}. Reply to this message to opt in.'
-        )
+        send_worker_invite(worker.phone, union_name)
 
     return format(body)
 

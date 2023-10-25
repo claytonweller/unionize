@@ -2,10 +2,8 @@ from modules.union.table import UnionTable
 from modules.worker.table import WorkerTable
 from modules.union.data_class import UnionMessage, Union
 from modules.worker.sms_messaging import send_union_message, send_union_message_confirmation
-from boto3 import client
 from json import loads
 
-sns = client('sns')
 union_table = UnionTable()
 worker_table = WorkerTable()
 
