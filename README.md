@@ -1,6 +1,14 @@
 # Unionize
 Anonymous communication for people trying to start a union
 
+## Status of project
+Currently this is an personal education project. I'm using it to:
+- Learn how to use AWS sms pipelines (Pinpoint and SQS)
+- Showcase some event based microservice architecture in my portfolio
+- Get some non-trivial hands-on work with python
+
+The project has a proof of concept back end, but currently there's no front end to manage half the routes.
+
 ## Local development Setup
 - Install AWS CLI via homebrew using 
   ```bash
